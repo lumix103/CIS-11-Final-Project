@@ -1,19 +1,46 @@
 .ORIG	x3000
     AND R0, R0, #0
-    JSR GET_USER_INPUT
+    JSR PROMPT_USER_INPUT
     HALT
     PANIC 
         HALT
+
+    PROMPT_USER_INPUT
+        ST R7, TEMP1
+        JSR SAVE_REG
+        AND R1, R1, #0          ; Counter
+        PUI_LOOP
+            AND R2, R2, #0
+            ADD R2, R2, #-8
+            ADD R2, R1, R2
+            BRz BREAK_PUI_LOOP
+            LEA R0, PROMPT
+            PUTS
+            JSR SAVE_REG
+            JSR GET_USER_INPUT
+            JSR LOAD_REG
+            LD R0, INT_ARR
+            ADD R0, R0, R1
+            LD R2, PARSED_RESULT
+            LDR R2, R2, #0
+            STR R2, R0, #0
+            ADD R1, R1, #1
+            BR PUI_LOOP
+        BREAK_PUI_LOOP
+        JSR LOAD_REG
+        LD R7, TEMP1
+    RET
+
     GET_USER_INPUT
         ST R7, TEMP
         JSR SAVE_REG
         AND R1, R1, #0          ; Store result in R1
         GUI_LOOP
             AND R2, R2, #0      ; Temp storage
-            GETC                ; Get Character
+            GETC                ; Get Character w/ echo
+            OUT                 ; ----------------------
             ADD R2, R0, #-10    ; If R0 == 10 then break
             BRz BREAK_GUI_LOOP  ; ----------------------
-            OUT                 ; Output character
             AND R2, R2, #0      ; Reinitialize R2
             ADD R2, R2, R0      ; R2 = R0
             ADD R2, R2, #-16    ; ASCII Offset
@@ -78,7 +105,7 @@
         LD R7, REG_TEMP
     RET
     LOAD_REG
-        ST R7, REG_TEMP        ; Store the current value of R7 as a temp
+        ST R7, REG_TEMP         ; Store the current value of R7 as a temp
         LD R7, REG_STACK        ; Load the value at the top of the stack
         LD R0, EMPTY            ; Load the empty sentinel value 
         NOT R0, R0              ; Two's Complement
@@ -104,19 +131,20 @@
         LD R7, REG_TEMP
     RET
 
-PARSED_RESULT   .FILL	x3100
+    PARSED_RESULT   .FILL	x3100
 
-MULT_X          .FILL	x3101
-MULT_Y          .FILL	x3102
-MULT_R          .FILL	x3103
+    MULT_X          .FILL	x3101
+    MULT_Y          .FILL	x3102
+    MULT_R          .FILL	x3103
 
-INT_ARR         .FILL	x3104
+    INT_ARR         .FILL	x3104   
 
-REG_TEMP        .FILL	x310C
-REG_STACK       .FILL	x310D
+    REG_TEMP        .FILL	x310C
+    REG_STACK       .FILL	x310D
 
-EMPTY           .FILL	xC000
-TEMP            .FILL	x0
-PROMPT          .STRINGZ	"Enter a number within 0 and 100: "
+    EMPTY           .FILL	xC000
+    TEMP            .FILL	x0
+    TEMP1           .FILL	x0
+    PROMPT          .STRINGZ	"Enter a number within 0 and 100: "
 
 .END
