@@ -1,6 +1,56 @@
 .ORIG	x3000
     ; TODO: Start
     HALT
+
+    GET_USER_INPUT
+        JSR SAVE_REG            ; Need to save R7
+        AND R1, R1, #0          ; Store result in R1
+        GUI_LOOP
+            AND R2, R2, #0      ; Temp storage
+            GETC                ; Get Character
+            ADD R2, R0, #-10    ; If R0 == 10 then break
+            BRz BREAK_GUI_LOOP  ; ----------------------
+            OUT                 ; Output character
+            AND R2, R2, #0      ; Reinitialize R2
+            ADD R2, R2, R0      ; R2 = R0
+            ADD R2, R2, #-16    ; ASCII Offset
+            ADD R2, R2, #-16    ; ------------
+            ADD R2, R2, #-16    ; ------------
+            BRn PANIC           ; Error not an ASCII value of 48 or higher
+            ADD R2, R2, #-9     ; Checking if ascii value is higher than 47
+            BRp PANIC           ; Error not an ASCII value of 57 or lower
+            ADD R2, R2, #9      ; Peserving ACII value
+            LD R3, MULT_X       ; Load x3101
+            LD R4, MULT_Y       ; Load x3102
+            AND R5, R5, #0      ; Clear R5
+            ADD R5, R5, xA      ; R5 = 10
+            STR R2, R3, #0      ; Store value of R2 at address hold by R3
+            STR R5, R4, #0      ; Store value of R5 at address hold by R4
+            JSR SAVE_REG        ; Save registers
+            JSR MULT            ; Jump to subroutine MULT
+            JSR LOAD_REG        ; Load registers
+            LD R3, MULT_R       ; Load x3103
+            LDR R3, R3, #0      ; Load value from address hold by R3 to R3
+        BREAK_GUI_LOOP
+        LD R2, PARSED_RESULT    ; Store result at x3100
+        STR R1, R2, #0          ; ---------------------
+        JSR LOAD_REG            ; Load registers
+    RET
+    MULT                        ; Positive integers only
+        LD R0, MULT_X           ; Load x3101
+        LD R1, MULT_Y           ; Load x3102
+        LDR R0, R0, #0          ; Load value from address hold by R0 to R0
+        LDR R1, R1, #0          ; Load value from address hold by R1 to R1
+        AND R2, R2, #0          ; Clear R2 and use as results
+        MULT_LOOP
+            ADD R1, R1, #0      ; If R1 == 0 then break
+            BRz BREAK_MULT_LOOP ; ---------------------
+            ADD R2, R2, R1      ; R2 = R2 + R1
+            ADD R1, R1, #-1     ; R1--
+        BREAK_MULT_LOOP
+        LD R0, MULT_R           ; Load value x3103
+        STR R2, R0, #0          ; Store the value of R2 into the address hold by R0
+    RET
     SAVE_REG
         ST R7, TEMP_SAVE
         LD R7, STACK_TOP
@@ -58,3 +108,5 @@ REG_TEMP        .FILL	x310C
 REG_STACK       .FILL	x310D
 
 EMPTY           .FILL	xC000
+
+PROMPT          .STRINGZ	"Enter a number within 0 and 100: "
