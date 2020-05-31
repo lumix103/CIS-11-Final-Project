@@ -1,2 +1,22 @@
 //Symbol Name		Page Address
 //----------------	------------
+//	BREAK_GUI_LOOP          3022
+//	EMPTY                   3061
+//	GET_USER_INPUT          3004
+//	GUI_LOOP                3007
+//	INT_ARR                 305E
+//	LOAD_REG                3044
+//	LR_BREAK                3058
+//	MULT                    3027
+//	MULT_BREAK              3031
+//	MULT_LOOP               302C
+//	MULT_R                  305D
+//	MULT_X                  305B
+//	MULT_Y                  305C
+//	PANIC                   3003
+//	PARSED_RESULT           305A
+//	PROMPT                  3063
+//	REG_STACK               3060
+//	REG_TEMP                305F
+//	SAVE_REG                3034
+//	TEMP                    3062
