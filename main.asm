@@ -1,10 +1,9 @@
 .ORIG	x3000
-    AND R0, R0, #0
     JSR PROMPT_USER_INPUT
+    JSR BUBBLE_SORT
     HALT
     PANIC 
         HALT
-
     PROMPT_USER_INPUT
         ST R7, TEMP1
         JSR SAVE_REG
@@ -30,7 +29,6 @@
         JSR LOAD_REG
         LD R7, TEMP1
     RET
-
     GET_USER_INPUT
         ST R7, TEMP
         JSR SAVE_REG
@@ -78,9 +76,7 @@
         MULT_LOOP
             ADD R1, R1, #0
             BRnz MULT_BREAK
-
             ADD R2, R2, R0
-
             ADD R1, R1, #-1
             BR MULT_LOOP
         MULT_BREAK
@@ -120,31 +116,69 @@
         LDR R4, R7, #-4         ; Load the value from address hold by R7 with an offset of -4 at R4
         LDR R5, R7, #-3         ; Load the value from address hold by R7 with an offset of -3 at R5
         LDR R6, R7, #-2         ; Load the value from address hold by R7 with an offset of -2 at R6
-
         LD R1, EMPTY            ; Load the value of empty sentinel
         STR R1, R7, #-1         ; Store the empty sentinel at the address hold by R7 with an offset of -1
-
         LDR R1, R7, #-7         ; Load the value from address hold by R7 with an offset of -7 at R7
         ADD R7, R7, #-8 
         ST R7, REG_STACK
         LR_BREAK  
         LD R7, REG_TEMP
     RET
-
+    BUBBLE_SORT
+        ST R7, TEMP                         ; Save R7 into TEMP
+        JSR SAVE_REG                        ; Save Registers
+        AND R1, R1, #0                      ; Inintialize counter 1
+        BSO_LOOP                            
+            AND R3, R3, #0                  ; Clear R3 
+            ADD R3, R3, #-7                 ; R3 = -7
+            AND R4, R4, #0                  ; Clear R4
+            ADD R4, R3, R1                  ; if counter1 < 7 then continue
+            BRzp BREAK_BSO_LOOP             ; else break
+                AND R2, R2, #0              ; Inintialize counter 2
+                BSI_LOOP
+                    AND R4, R4, #0          ; Clear R4
+                    ADD R4, R4, R1          ; R4 = R1
+                    NOT R4, R4              ; Two's complement of R4 (-R4)
+                    ADD R4, R4, #1          ; ----------------
+                    ADD R4, R4, #7          ; R4 = counter1 - 8
+                    NOT R4, R4              ; Two's complement
+                    ADD R4, R4, #1          ; ----------------
+                    ADD R4, R2, R4          ; counter2 - (counter1 - 7 - 1) < 0 or counter2 - counter1 + 8 < 0
+                    BRzp BREAK_BSI_LOOP
+                    LD R0, INT_ARR          ; Load value x3104
+                    ADD R0, R0, R2          ; x3104 + counter2
+                    LD R3, INT_ARR          ; Load value x3104
+                    ADD R3, R3, R2          ; x3014 + counter2 + 1
+                    ADD R3, R3, #1          ; --------------------
+                    LDR R4, R0, #0          ; Load the value from address hold by R0 into R4 
+                    LDR R5, R3, #0          ; Load the value from address hold by R3 into R5
+                    AND R6, R6, #0          ; Clear R6
+                    ADD R6, R6, R5          ; R6 = R5
+                    NOT R6, R6              ; Two's Complement
+                    ADD R6, R6, #1          ; ----------------
+                    ADD R6, R4, R6          ; INT_ARRAY[COUNTER1] - INT_ARRAY[COUNTER2]
+                    BRnz BSI_GREATER_FALSE
+                        STR R4, R3, #0      ; Store the value of R4 into the address hold by R3
+                        STR R5, R0, #0      ; Store the value of R5 into the address hold by R0
+                    BSI_GREATER_FALSE  
+                    ADD R2, R2, #1          ; Increment counter2
+                    BR BSI_LOOP
+                BREAK_BSI_LOOP
+            ADD R1, R1, #1                  ; Increment coutnter1
+            BR BSO_LOOP                     
+        BREAK_BSO_LOOP
+        JSR LOAD_REG                        ; Load Registers
+        LD R7, TEMP                         ; Load R7 into TEMP
+    RET
     PARSED_RESULT   .FILL	x3100
-
     MULT_X          .FILL	x3101
     MULT_Y          .FILL	x3102
     MULT_R          .FILL	x3103
-
     INT_ARR         .FILL	x3104   
-
     REG_TEMP        .FILL	x310C
     REG_STACK       .FILL	x310D
-
     EMPTY           .FILL	xC000
     TEMP            .FILL	x0
     TEMP1           .FILL	x0
     PROMPT          .STRINGZ	"Enter a number within 0 and 100: "
-
 .END
