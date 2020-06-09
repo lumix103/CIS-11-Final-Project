@@ -1,6 +1,7 @@
 .ORIG	x3000
     JSR PROMPT_USER_INPUT
     JSR BUBBLE_SORT
+    JSR PRINT_NUMBERS
     HALT
     PANIC 
         HALT
@@ -219,19 +220,87 @@
             STI R5, DIV_R
             STI R0, DIV_REM
     RET
-    DIV_X           .FILL   x3200
-    DIV_Y           .FILL	x3201
-    DIV_R           .FILL	x3202
-    DIV_REM         .FILL	x3203
-    PARSED_RESULT   .FILL	x3100
-    MULT_X          .FILL	x3101
-    MULT_Y          .FILL	x3102
-    MULT_R          .FILL	x3103
-    INT_ARR         .FILL	x3104   
-    REG_TEMP        .FILL	x310C
-    REG_STACK       .FILL	x310D
+    DIV_X           .FILL   x3300
+    DIV_Y           .FILL	x3301
+    DIV_R           .FILL	x3302
+    DIV_REM         .FILL	x3303
+    PARSED_RESULT   .FILL	x3200
+    MULT_X          .FILL	x3201
+    MULT_Y          .FILL	x3202
+    MULT_R          .FILL	x3203
+    INT_ARR         .FILL	x3204   
+    REG_TEMP        .FILL	x340C
+    REG_STACK       .FILL	x340D
     EMPTY           .FILL	xC000
     TEMP            .FILL	x0
     TEMP1           .FILL	x0
     PROMPT          .STRINGZ	"Enter a number within 0 and 100: "
+    PRINT_NUMBERS
+        ST R7, TEMP
+        JSR SAVE_REG
+        AND R1, R1, #0      ; Clear R1 
+        ADD R1, R1, #10     ; R1 = 10
+        STI R1, DIV_Y       ; Loading constant 10 in DIV_Y
+        ADD R1, R1, #-10    ; Setting R1 back to zero -> counter   
+        PRINT_LOOP
+            ADD R0, R1, #-8         ; counter < 8
+            BRzp BREAK_PRINT_LOOP
+            LD  R0, INT_ARR     ; Pointer to number array
+            ADD R0, R0, R1      ; Pointer offset
+            LDR R0, R0, #0      ; number = arr[counter]
+            I_PRINT_LOOP        ; Highest number allowed is 100 so we need 3 registers
+                                ; R0 and R1 are already in use so lets use R2, R3, R4 
+                                ; to carry the 3 digits we need and lets user R5 and R6 
+            STI R0, DIV_X
+            JSR SAVE_REG
+            JSR DIV
+            JSR LOAD_REG
+            LDI R0, DIV_R
+            LDI R2, DIV_REM     
+            ADD R2, R2, #15     ; ASCII Offset
+            ADD R2, R2, #15     ; ------------
+            ADD R2, R2, #15     ; ------------
+            ADD R2, R2, #3      ; ------------
+            ADD R0, R0, #0
+            BRz PRINT_CHAR0
+            STI R0, DIV_X
+            JSR SAVE_REG
+            JSR DIV
+            JSR LOAD_REG
+            LDI R0, DIV_R
+            LDI R3, DIV_REM     
+            ADD R3, R3, #15     ; ASCII Offset
+            ADD R3, R3, #15     ; ------------
+            ADD R3, R3, #15     ; ------------
+            ADD R3, R3, #3      ; ------------
+            ADD R0, R0, #0
+            BRz PRINT_CHAR1
+            STI R0, DIV_X
+            JSR SAVE_REG
+            JSR DIV
+            JSR LOAD_REG
+            LDI R0, DIV_R
+            LDI R4, DIV_REM     
+            ADD R4, R4, #15     ; ASCII Offset
+            ADD R4, R4, #15     ; ------------
+            ADD R4, R4, #15     ; ------------
+            ADD R4, R4, #3      ; ------------
+            ADD R0, R4, #0     
+            OUT
+            PRINT_CHAR1
+            ADD R0, R3, #0
+            OUT
+            PRINT_CHAR0
+            ADD R0, R2, #0
+            OUT
+            AND R0, R0, #0      ; Print newline
+            ADD R0, R0, #10     ; -------------
+            OUT
+
+            ADD R1, R1, #1      ; counter++
+            BR PRINT_LOOP
+        BREAK_PRINT_LOOP
+        JSR LOAD_REG
+        LD R7, TEMP
+    RET
 .END
