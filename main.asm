@@ -170,6 +170,59 @@
         JSR LOAD_REG                        ; Load Registers
         LD R7, TEMP                         ; Load R7 into TEMP
     RET
+    DIV
+        LDI R0, DIV_X   ; x
+        LDI R1, DIV_Y   ; y
+        AND R5, R5, #0  ; Clear R5 > counter
+        AND R6, R6, #0  ; Clear R6 > sign
+        ADD R0, R0, #0
+        BRn ISXNEG      ; if x < 0 then x = -x
+        CHECKYNEG
+        ADD R1, R1, #0
+        BRn ISYNEG
+        BR ISNOTNEG     ; if y < 0 then y = -x
+        ISXNEG
+            NOT R0, R0
+            ADD R0, R0, #1
+            NOT R6, R6
+            ADD R6, R6, #1
+            BR CHECKYNEG
+        ISYNEG
+            NOT R1, R1
+            ADD R1, R1, #1
+            NOT R6, R6
+            ADD R6, R6, #1
+            BR ISNOTNEG
+        ISNOTNEG
+        NOT R1, R1      ; y = -y
+        ADD R1, R1, #1  ; ------
+        DIVLOOP
+            ADD R0, R0, R1  ;   then  x = x - y
+            BRn ISNEG       ;         if x <= 0
+            ADD R5, R5, #1  ;            counter++
+            BRz ISZERO      ;           then  break
+            BR DIVLOOP
+        ENDDIVLOOP
+        ADD R0, R0, #0      ; LC3 Does not like two labels next to each other so
+        ISNEG               ; Add back R1 because R0 is the remainder
+            NOT R1, R1
+            ADD R1, R1, #1
+            ADD R0, R0, R1
+        ISZERO
+            ADD R6, R6, #0
+            BRnz SIGNOTNEG
+            NOT R0, R0      ; x = -x
+            ADD R0, R0, #1  ; ------
+            NOT R5, R5      ; counter = -counter
+            ADD R5, R5, #1  ; ------------------
+            SIGNOTNEG
+            STI R5, DIV_R
+            STI R0, DIV_REM
+    RET
+    DIV_X           .FILL   x3200
+    DIV_Y           .FILL	x3201
+    DIV_R           .FILL	x3202
+    DIV_REM         .FILL	x3203
     PARSED_RESULT   .FILL	x3100
     MULT_X          .FILL	x3101
     MULT_Y          .FILL	x3102
